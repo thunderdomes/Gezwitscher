@@ -1,0 +1,16 @@
+body {
+  background: #ffff;
+  color: #3b3b41;
+  border: none;
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 400;
+}
+.main-body {
+  margin-top: 100px;
+  background: #fff;
+  padding: 10px;
+  border: 1px solid #ccc;
+}
+.menu {
+  background: #e42930;
+}
