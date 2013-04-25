@@ -41,35 +41,62 @@
 
 <div class="container main-body">
      <div class="hero-unit"><h3><time></time></h3></div>
-    <div id="container"></div>
+    <div id="container">
+       
+    </div>
+    <div id="template" style="display:none">
+        <table class='table table-bordered'>
+            <thead>
+                <tr><th>NO</th><th>From</th><th>Avatar</th><th>Waktu</th><th>Ocehan</th></tr>
+            </thead>
+            <tbody id="isi_tweat">
+
+            </tbody>
+        </table>
+    </div>
 
 </div> <!-- /container -->
 <script>
-
         // creating a new websocket
-        var socket = io.connect('http://app.vootobox.com:5130');
+        var socket = io.connect('http://192.168.1.66:5130');
         // on message received we print the new data inside the #container div
         var twittererere;
-        socket.on('notification', function (data) {
-            var usersList = "<table class='table table-bordered'>"+
-            "<thead><tr><th>NO</th><th>From</th><th>Avatar</th><th>Waktu</th><th>Ocehan</th></tr></thead><tbody><tr>";
+        var user_id = 0;
+        function load(){
+            socket.emit('all', user_id, function (data) {
+                var usersList = '';
+                $.each(data['hash'],function(index,user){
+                    var id_body = "#body_"+user;
+                    id_body = id_body.replace (/#/g, "");
+                    if($('#'+id_body).length == 0){
+                        console.log(id_body);
+                        $("#container").append($("#template").html());
+                        $("#container #isi_tweat").attr('id',id_body);
+                    } 
+                });
+                $.each(data.users,function(index,user){
 
-            $.each(data.users,function(index,user){
+                    var id_body = "#body_"+user.filter;
+                    id_body = id_body.replace (/#/g, "");
 
-
-                usersList += "<td>" + user.id + "</td>" +
-                "<td> @" + user.from + "</td>" +
-                "<td><img src=" +user.profile_image_url+ "></td>" +
-                "<td>" + user.date_twit + "</td>" +
-                "<td>" + user.content + "</td>" +
-                " </tr>";
+                    usersList = "<tr><td>" + user.id + "</td>" +
+                    "<td> @" + user.from + "</td>" +
+                    "<td><img src=" +user.profile_image_url+ "></td>" +
+                    "<td>" + user.date_twit + "</td>" +
+                    "<td>" + user.content + "</td>" +
+                    " </tr>";
+                    user_id = user.id;
+                    $("#"+id_body).prepend(usersList);
+                });
                 $('time').html('Last Update:' + data.time);
-
+                //console.log(usersList);
             });
-            usersList += "</tbody></table>";
-            $('#container').html(usersList);
-
-           
+        }
+        socket.on('connect', function () { // TIP: you can avoid listening on `connect` and listen on events directly too!
+            load();
+        });
+        socket.on('notification', function (data) {
+            load(data);
         });
         </script>
     <!-- Le javascript
