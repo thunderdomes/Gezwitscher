@@ -1,7 +1,7 @@
-
 var Twit = require('twit')
-
 var http = require('net');
+var cache = require('./cache.js');
+var config = require('./config.js');
 
 var app                 = require('http').createServer(handler),
     io                  = require('socket.io').listen(app,{ log: false }),
@@ -9,20 +9,14 @@ var app                 = require('http').createServer(handler),
     mysql               = require('mysql'),
     connectionsArray    = [];
 
-var connection = mysql.createConnection({
-	host     : 'localhost',
-	user     : 'root',
-	password : 'root',
-	database:'node_test'
-}),
+var connection = mysql.createConnection(config.mysql),
     POLLING_INTERVAL = 1000,
     pollingTimer;
 connection.connect(function(err) {
   // connected! (unless `err` is set)
-  //console.log( err );
+  console.log( err );
 });
 
-// creating the server ( localhost:8000 )
 app.listen(5130);
 
 var T = new Twit({
@@ -33,41 +27,35 @@ var T = new Twit({
 
 });
 
-
-/*
-function a(){
-	twit.search('@', {}, function(err, data) {
-	console.log('@',data.results[0].from_user ,'yaitu---->',data.results[0].text);
-	
-	});
-}
-setInterval(a,1*100);
-BritAmaMusicBankLive
-*/
-
-var hash = ['#xxx','#sex'];
+var hash = ['fatin','mika'];
 var stream = T.stream('statuses/filter', { track: hash });
 
 stream.on('tweet', function (tweet) {
 	//console.log(tweet);
 	var ts = Date.now() / 1000;
+	console.log("new tweat "+tweet.id);
 	
 	var length = hash.length,
 	    element = null;
+
 	for (var i = 0; i < length; i++) {
 	  element = hash[i];
-	  if(tweet.text.indexOf(element) !== -1){
+
+	  if(tweet.text.toUpperCase().indexOf(element.toUpperCase()) !== -1){
 	  	var post  = {id_twit: tweet.id, from:tweet.user.screen_name,date_twit: tweet.created_at,content:tweet.text, profile_image_url:tweet.user.profile_image_url,filter:element};
-		var query = connection.query('INSERT INTO tb_LA SET ?', post, function(err, result) {});
+		console.log("new tweat save to db : "+tweet.id+" filter : "+element);
+		connection.query('INSERT INTO tb_LA SET ?', post, function(err, result) {
+			connection.query('SELECT max(id) as id from tb_LA', function(err, rows, fields) {
+			  	if (err){ console.log(err); }
+			  	console.log("Notif all clients");
+			  	var max = 0
+			  	if(rows.length > 0)
+				  	max = rows[0].id;
+				io.sockets.emit('notification', max);
+			});
+		});
 	  }
 	}
-
-	//if(!connectionsArray.length){
-		connectionsArray.forEach(function( tmpSocket ){
-			tmpSocket.volatile.emit( 'notification' , true );
-		});
-	//}
-	
 });
 // on server started we can load our client.html page
 function handler ( req, res ) {
@@ -82,43 +70,33 @@ function handler ( req, res ) {
 	});
 }
 
-// creating a new websocket to keep the content updated without any AJAX request
 io.sockets.on( 'connection', function ( socket ) {
+	socket.on('all', function (min, max, fn) {
+		var id_cache = "tweet_"+min+"to"+max
+		var rowsc = cache.get(id_cache);
+		console.log(id_cache);
+		if(rowsc===null){
+			console.log( 'Load From : '+min+' to '+max);
+			var sql = 'select * from (SELECT * FROM tb_LA WHERE id > \''+min+'\' and id <= \''+max+'\' ORDER BY id DESC LIMIT 0 , 100) a ORDER BY ID';
+			var query = connection.query(sql, function(err, rows, fields) {
+				cache.put(id_cache,rows,100000);
+				fn({users:rows,hash:hash});
+			});
+		}
+		else{
+			console.log( 'Load From : '+min+' to '+max+" from cache");
+			fn({users:rowsc,hash:hash});
+		}
+	});
 
-	//console.log('Number of connections:' + connectionsArray.length);
-	// starting the loop only if at least there is one user connected
-	if (!connectionsArray.length) {
-	//	pollingLoop();
-	}
-
-	socket.on('all', function (user_id, fn) {
-		var query = connection.query('select * from (SELECT * FROM tb_LA WHERE id > \''+user_id+'\' ORDER BY id DESC LIMIT 0 , 100) a ORDER BY ID'),
-		users = []; // this array will contain the result of our db query
-	// resuming the connection that is paused each loop
-		connection.resume();
-		console.log( 'Load From : '+user_id);
-		// setting the query listeners
-		query
-		.on('error', function(err) {
-			// Handle error, and 'end' event will be emitted after this as well
-			//console.log( err );
-			updateSockets( err );
-
-		})
-		.on('result', function( user ) {
-			// it fills our array looping on each user row inside the db
-			users.push( user );
-		})
-		.on('end',function(){
-			// loop on itself only if there are sockets still connected
-			if(connectionsArray.length) {
-				//pollingTimer = setTimeout( pollingLoop, POLLING_INTERVAL );
-				connection.pause();
-				fn({users:users,hash:hash});
-			//	updateSockets();
-			}
-		});
-	    
+	connection.query('SELECT max(id) as id from tb_LA', function(err, rows, fields) {
+	  	if (err){ console.log(err); }
+	  	var max = 0;
+	  	if(rows.length > 0){
+		  	max = rows[0].id;
+		}
+		socket.emit('notification', max);
+		console.log("Notif to a new client that max id to load is "+max);
 	});
 
 	socket.on('disconnect', function () {
@@ -133,20 +111,3 @@ io.sockets.on( 'connection', function ( socket ) {
 	connectionsArray.push( socket );
 	console.log( 'A new socket is connected! total curent socket : '+connectionsArray.length );
 });
-
-var updateSockets = function ( data ) {
-	// adding the time of the last update
-	data.time = new Date();
-	// sending new data to all the sockets connected
-	connectionsArray.forEach(function( tmpSocket ){
-		tmpSocket.volatile.emit( 'notification' , data );
-	});
-};
-/*
-var http = require('http');
-http.createServer(function (req, res) {
-  res.writeHead(200, {'Content-Type': 'text/plain'});
-  res.end('Hello World\n');
-}).listen(1337, '127.0.0.1');
-console.log('Server running at http://127.0.0.1:1337/');
-*/

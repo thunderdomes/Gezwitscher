@@ -60,12 +60,13 @@
 </div> <!-- /container -->
 <script>
         // creating a new websocket
-        var socket = io.connect('http://192.168.1.66:5130');
+        var socket = io.connect('/');
         // on message received we print the new data inside the #container div
         var twittererere;
-        var user_id = 0;
-        function load(){
-            socket.emit('all', user_id, function (data) {
+        min_id = 0;
+        function load(min,max){
+            min_id = max;
+            socket.emit('all', min, max, function (data) {
                 var usersList = '';
                 $.each(data['hash'],function(index,user){
                     var id_body = "#body_"+user;
@@ -77,7 +78,6 @@
                     } 
                 });
                 $.each(data.users,function(index,user){
-
                     var id_body = "#body_"+user.filter;
                     id_body = id_body.replace (/#/g, "");
 
@@ -87,18 +87,14 @@
                     "<td>" + user.date_twit + "</td>" +
                     "<td>" + user.content + "</td>" +
                     " </tr>";
-                    user_id = user.id;
                     $("#"+id_body).prepend(usersList);
                 });
                 $('time').html('Last Update:' + data.time);
                 //console.log(usersList);
             });
         }
-        socket.on('connect', function () { // TIP: you can avoid listening on `connect` and listen on events directly too!
-            load();
-        });
-        socket.on('notification', function (data) {
-            load(data);
+        socket.on('notification', function (max_id) {
+            load(min_id,max_id);
         });
         </script>
     <!-- Le javascript
