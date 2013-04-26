@@ -4,5 +4,6 @@ module.exports = {
     	user : "root",
     	password : "root",
     	database : "node_test"
-    }
+    },
+    hash : ['fatin','mika']
 }

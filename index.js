@@ -27,7 +27,7 @@ var T = new Twit({
 
 });
 
-var hash = ['fatin','mika'];
+var hash = config.hash;
 var stream = T.stream('statuses/filter', { track: hash });
 
 stream.on('tweet', function (tweet) {
