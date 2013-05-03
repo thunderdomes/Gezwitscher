@@ -42,11 +42,11 @@ stream.on('tweet', function (tweet) {
 	  element = hash[i];
 
 	  if(tweet.text.toUpperCase().indexOf(element.toUpperCase()) !== -1){
-	  	var post  = {id_twit: tweet.id, from:tweet.user.screen_name,date_twit: tweet.created_at,content:tweet.text, profile_image_url:tweet.user.profile_image_url,filter:element};
 		console.log("new tweat save to db : "+tweet.id+" filter : "+element);
-		connection.query('INSERT INTO tb_LA SET ?', post, function(err, result) {
+		var params = [tweet.id,tweet.user.screen_name,tweet.user.profile_image_url,tweet.created_at,tweet.text,element,element];
+		connection.query('INSERT INTO tb_LA values(null,?,?,?,?,?,(select IFNULL(MAX(m.no)+1,1) from tb_LA m where m.filter = ?),?)', params, function(err, result) {
+			if (err){ console.log(err); }
 			connection.query('SELECT max(id) as id from tb_LA', function(err, rows, fields) {
-			  	if (err){ console.log(err); }
 			  	console.log("Notif all clients");
 			  	var max = 0
 			  	if(rows.length > 0)
