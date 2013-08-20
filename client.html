@@ -4,7 +4,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Djarum Coklat</title>
+    <title>Alumni Wikusama Mudik Bareng 2013</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
@@ -31,7 +31,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="brand" href="#">HashTag Monitor</a>
+            <a class="brand" href="#">Hashtag Wikusama Mudik Bareng</a>
             <div class="nav-collapse collapse">
 
             </div><!--/.nav-collapse -->
@@ -45,8 +45,8 @@
        
     </div>
     <div id="template" style="display:none">
-        <div style="width:50%;float:left">
-            <table class='table table-bordered' style="widht:50%">
+        <div style="width:100%;float:left">
+            <table class='table table-bordered' style="widht:100%">
                 <thead>
                     <tr><th>NO</th><th>From</th><th>Avatar</th><th>Waktu</th><th>Ocehan</th></tr>
                 </thead>
@@ -92,7 +92,7 @@
                 $('time').html('Last Update:' + data.time);
                 //console.log(usersList);
             });
-        }
+       }
         socket.on('notification', function (max_id) {
             load(min_id,max_id);
         });

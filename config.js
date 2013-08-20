@@ -2,8 +2,8 @@ module.exports = {
     mysql : {
     	host : "localhost",
     	user : "root",
-    	password : "root",
-    	database : "node_test"
+    	password : "merdeka123",
+    	database : "wikusama"
     },
-    hash : ['fatin','mika']
+    hash : ['wegonode']
 }
