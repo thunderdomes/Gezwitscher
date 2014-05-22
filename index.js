@@ -20,10 +20,10 @@ connection.connect(function(err) {
 app.listen(5130);
 
 var T = new Twit({
-	consumer_key: 'uTaunR6TuFSyWYOsRGtOgw',
-	consumer_secret: 'uJliBxxc33npZOQhbuGOcPPtAlSY6HVQeGoxaC3QY',
-	access_token: '15740707-aXRJmkyHO8yp8p2PliO0kAbjqxPXvqjqwAHuTJKHQ',
-	access_token_secret: 'Hl0JVX0YufjWAbjsCpfe7RWkMRhe3CHS5uuj6hX6EE'
+	consumer_key: 'aKP5yIItwPyhyW5LnFG7Be7HJ',
+	consumer_secret: 't1SSy7Ekv18BGsVR9s9uCPyA2wEzjn69VNyPxoJ8gCVuCB9kFR',
+	access_token: '965212952-l3OgRmlg25QAhpsHxgoDFfX65BafD8lYvgw5Jo56',
+	access_token_secret: 'oqHzfogsoT5oSQ8FQTFCw3NbEURKmHHHiSLl6xIDr7ebE'
 
 });
 
@@ -44,7 +44,8 @@ stream.on('tweet', function (tweet) {
 	  if(tweet.text.toUpperCase().indexOf(element.toUpperCase()) !== -1){
 		console.log("new tweat save to db : "+tweet.id+" filter : "+element);
 		var params = [tweet.id,tweet.user.screen_name,tweet.user.profile_image_url,tweet.created_at,tweet.text,element,element];
-		connection.query('INSERT INTO tb_LA values(null,?,?,?,?,?,(select IFNULL(MAX(m.no)+1,1) from tb_LA m where m.filter = ?),?)', params, function(err, result) {
+		connection.query('INSERT INTO tb_LA values(null,?,?,?,?,?,
+		(select IFNULL(MAX(m.no)+1,1) from tb_LA m where m.filter = ?),?)', params, function(err, result) {
 			if (err){ console.log(err); }
 			connection.query('SELECT max(id) as id from tb_LA', function(err, rows, fields) {
 			  	console.log("Notif all clients");
