@@ -44,8 +44,7 @@ stream.on('tweet', function (tweet) {
 	  if(tweet.text.toUpperCase().indexOf(element.toUpperCase()) !== -1){
 		console.log("new tweat save to db : "+tweet.id+" filter : "+element);
 		var params = [tweet.id,tweet.user.screen_name,tweet.user.profile_image_url,tweet.created_at,tweet.text,element,element];
-		connection.query('INSERT INTO tb_LA values(null,?,?,?,?,?,
-		(select IFNULL(MAX(m.no)+1,1) from tb_LA m where m.filter = ?),?)', params, function(err, result) {
+		connection.query('INSERT INTO tb_LA values(null,?,?,?,?,?,(select IFNULL(MAX(m.no)+1,1) from tb_LA m where m.filter = ?),?)', params, function(err, result) {
 			if (err){ console.log(err); }
 			connection.query('SELECT max(id) as id from tb_LA', function(err, rows, fields) {
 			  	console.log("Notif all clients");
